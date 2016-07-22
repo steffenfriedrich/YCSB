@@ -1,0 +1,49 @@
+#read heavy workload
+
+workload=com.yahoo.ycsb.workloads.OnlineShopWorkload
+requestdistribution=zipfan
+recordcount = 950
+operationcount = 1000
+
+# load phase insert
+
+userStart = 0;
+bookStart = 0;
+authorStart = 0;
+userCount=500
+authorCount=50
+bookCount=300
+recCount= 100
+
+# transaction insert
+insertAuthorStart= 51
+insertAuthorCount= 50
+insertBookStart=301
+insertBookCount 500
+insertUserStart= 501
+insertUserCount= 5000
+
+# transaction insert proportions
+insertUser=0
+insertBook=0
+insertAuthor=0
+insertRecommendation=0
+
+# transaction read proportions
+getLatestRecommendations=0.14
+getAllRecommendations=0.1
+getUsersRecommendations=0.1
+getAuthorByID=0.14
+getAuthorByBookID=0.14
+findBooksByGenre=0.18
+findBooksName=0.18
+
+# transaction update proportions
+updateAuthor=0
+updateBook=0
+updateRecommendation=0
+
+# transaction delete proportions
+deleteBook=0
+deleteAllRecommendationsBelongToBook=0
+deleteAuthor=0

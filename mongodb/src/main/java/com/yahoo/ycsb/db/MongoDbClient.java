@@ -264,8 +264,7 @@ public class MongoDbClient extends DB {
           // this is effectively an insert, but using an upsert instead due
           // to current inability of the framework to clean up after itself
           // between test runs.
-          collection.replaceOne(new Document("_id", toInsert.get("_id")),
-              toInsert, UPDATE_WITH_UPSERT);
+          collection.replaceOne(new Document("_id", toInsert.get("_id")), toInsert, UPDATE_WITH_UPSERT);
         } else {
           collection.insertOne(toInsert);
         }
