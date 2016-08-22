@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!--
-Copyright (c) 2012-2016 YCSB contributors. All rights reserved.
+<!-- 
+Copyright (c) 2012 - 2016 YCSB contributors. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License. You
@@ -27,21 +26,15 @@ LICENSE file.
     <relativePath>../binding-parent</relativePath>
   </parent>
 
-  <artifactId>cassandra2-binding</artifactId>
-  <name>Cassandra 2.1+ DB Binding</name>
+  <artifactId>arangodb-binding</artifactId>
+  <name>ArangoDB Binding</name>
   <packaging>jar</packaging>
 
-  <properties>
-    <!-- Skip tests by default. will be activated by jdk8 profile -->
-    <skipTests>true</skipTests>
-  </properties>
-
   <dependencies>
-    <!-- CQL driver -->
     <dependency>
-      <groupId>com.datastax.cassandra</groupId>
-      <artifactId>cassandra-driver-core</artifactId>
-      <version>${cassandra2.cql.version}</version>
+      <groupId>com.arangodb</groupId>
+      <artifactId>arangodb-java-driver</artifactId>
+      <version>${arangodb.version}</version>
     </dependency>
     <dependency>
       <groupId>com.yahoo.ycsb</groupId>
@@ -49,13 +42,27 @@ LICENSE file.
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.cassandraunit</groupId>
-      <artifactId>cassandra-unit</artifactId>
-      <version>3.0.0.1</version>
-      <classifier>shaded</classifier>
-      <scope>test</scope>
-    </dependency>
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-api</artifactId>
+		<version>1.7.13</version>
+		<type>jar</type>
+		<scope>compile</scope>
+	</dependency>
+	<dependency>
+		<groupId>ch.qos.logback</groupId>
+		<artifactId>logback-classic</artifactId>
+		<version>1.1.3</version>
+		<type>jar</type>
+		<scope>provided</scope>
+	</dependency>
+	<dependency>
+		<groupId>ch.qos.logback</groupId>
+		<artifactId>logback-core</artifactId>
+		<version>1.1.3</version>
+		<type>jar</type>
+		<scope>provided</scope>
+	</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -63,19 +70,4 @@ LICENSE file.
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <profiles>
-    <!-- Cassandra 2.2+ requires JDK8 to run, so none of our tests
-         will work unless we're using jdk8.
-      -->
-    <profile>
-      <id>jdk8-tests</id>
-      <activation>
-        <jdk>1.8</jdk>
-      </activation>
-      <properties>
-        <skipTests>false</skipTests>
-      </properties>
-    </profile>
-  </profiles>
 </project>
