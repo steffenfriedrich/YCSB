@@ -1,7 +1,6 @@
 package com.yahoo.ycsb.db;
 
 import com.yahoo.ycsb.*;
-import de.unihamburg.sickstore.database.LocalSickClient;
 import de.unihamburg.sickstore.backend.Version;
 import de.unihamburg.sickstore.database.ReadPreference;
 import de.unihamburg.sickstore.database.WriteConcern;
@@ -25,7 +24,7 @@ public class LocalSickStoreClient extends DB {
      */
     private static final int STATUS_WRONGTYPE_STRINGEXPECTED = -2;
 
-    private LocalSickClient client = null;
+    private de.unihamburg.sickstore.database.client.LocalSickClient client = null;
 
     private WriteConcern writeConcern;
 
@@ -95,7 +94,7 @@ public class LocalSickStoreClient extends DB {
         readPreference = new ReadPreference(readPreferenceString);
 
         String configFile = props.getProperty("sickstore.localconfig", "./config/sickstore/config_no_delay.yml");
-        client = new LocalSickClient(destinationNode, configFile);
+        client = new de.unihamburg.sickstore.database.client.LocalSickClient(destinationNode, configFile);
     }
 
     /**

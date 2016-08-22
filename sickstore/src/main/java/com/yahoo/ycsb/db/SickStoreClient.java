@@ -2,12 +2,13 @@ package com.yahoo.ycsb.db;
 
 import com.yahoo.ycsb.*;
 import de.unihamburg.sickstore.backend.Version;
+import de.unihamburg.sickstore.backend.timer.SystemTimeHandler;
 import de.unihamburg.sickstore.database.ReadPreference;
-import de.unihamburg.sickstore.database.SickClient;
 import de.unihamburg.sickstore.database.WriteConcern;
 import de.unihamburg.sickstore.database.messages.exception.DatabaseException;
 
-import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 
 /**
@@ -27,7 +28,7 @@ public class SickStoreClient extends DB {
      */
     private static final int STATUS_WRONGTYPE_STRINGEXPECTED = -2;
 
-    private SickClient client = null;
+    private de.unihamburg.sickstore.database.client.SickStoreClient client = null;
 
     private WriteConcern writeConcern;
 
@@ -74,40 +75,35 @@ public class SickStoreClient extends DB {
      */
     @Override
     public void init() throws DBException {
+      // initialize SickStore driver
+      Properties props = getProperties();
+      String url = props.getProperty("sickstore.url", "localhost");
+      int port = Integer.parseInt(props.getProperty("sickstore.port", "54000"));
 
-        // initialize SickStore driver
-        Properties props = getProperties();
-        int timeout = Integer.parseInt(props.getProperty("sickstore.timeout", "1000"));
-        String url = props.getProperty("sickstore.url", "localhost");
-        int port = Integer.parseInt(props.getProperty("sickstore.port", "54000"));
+      int maxconnections = Integer.parseInt(props.getProperty("sickstore.maxconnections", "2"));
 
-        // configure write concern
-        writeConcern = new WriteConcern();
-        String ack = props.getProperty("sickstore.write_concern.ack", "1");
-        try {
-            writeConcern.setReplicaAcknowledgement(Integer.parseInt(ack));
-        } catch (NumberFormatException e) {
-            // no number given, assume it is a tag set
-            writeConcern.setReplicaAcknowledgementTagSet(ack);
-        }
+      // configure write concern
+      writeConcern = new WriteConcern();
+      String ack = props.getProperty("sickstore.write_concern.ack", "1");
+      try {
+        writeConcern.setReplicaAcknowledgement(Integer.parseInt(ack));
+      } catch (NumberFormatException e) {
+        // no number given, assume it is a tag set
+        writeConcern.setReplicaAcknowledgementTagSet(ack);
+      }
 
-        String journaling = props.getProperty("sickstore.write_concern.journaling", "false");
-        if (journaling.equals("true")) {
-            writeConcern.setJournaling(true);
-        }
+      String journaling = props.getProperty("sickstore.write_concern.journaling", "false");
+      if (journaling.equals("true")) {
+        writeConcern.setJournaling(true);
+      }
 
-        String destinationNode = props.getProperty("sickstore.dest_node", "primary");
+      String destinationNode = props.getProperty("sickstore.dest_node", "primary");
 
-        String readPreferenceString = props.getProperty("sickstore.read_preference", ReadPreference.PRIMARY);
-        readPreference = new ReadPreference(readPreferenceString);
+      String readPreferenceString = props.getProperty("sickstore.read_preference", ReadPreference.PRIMARY);
+      readPreference = new ReadPreference(readPreferenceString);
 
-        try {
-            client = new SickClient(timeout, url, port, destinationNode);
-            client.connect();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new DBException("Could not connect to server!");
-        }
+      client = new de.unihamburg.sickstore.database.client.SickStoreClient(url, port, destinationNode, new SystemTimeHandler(), maxconnections);
+      client.connect();
     }
 
     /**
