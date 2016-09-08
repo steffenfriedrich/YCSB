@@ -28,7 +28,8 @@ import org.apache.htrace.core.Tracer;
 import org.apache.htrace.core.TraceScope;
 
 import com.yahoo.ycsb.measurements.Measurements;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Wrapper around a "real" DB that measures latencies and counts return codes.
  * Also reports latency separately between OK and failed operations.
@@ -49,6 +50,10 @@ public class DBWrapper extends DB
 
   private static final String LATENCY_TRACKED_ERRORS_PROPERTY =
       "latencytrackederrors";
+
+  private static final Logger log = LoggerFactory.getLogger("Timeseries");
+  private boolean logtimeseries = true;
+  private long totalStartTime = Long.MAX_VALUE;
 
   private final String SCOPE_STRING_CLEANUP;
   private final String SCOPE_STRING_DELETE;
@@ -183,6 +188,9 @@ public class DBWrapper extends DB
 
   private void measure(String op, Status result, long intendedStartTimeNanos,
       long startTimeNanos, long endTimeNanos) {
+    if(startTimeNanos < totalStartTime) {
+      totalStartTime = intendedStartTimeNanos;
+    }
     String measurementName = op;
     if (result != Status.OK) {
       if (this.reportLatencyForEachError ||
@@ -192,10 +200,18 @@ public class DBWrapper extends DB
         measurementName = op + "-FAILED";
       }
     }
+    double latency = (endTimeNanos-startTimeNanos)/1000;
+    double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000;
+    if(logtimeseries) {
+      log.debug((startTimeNanos - totalStartTime) / 1000000  + ";" + (endTimeNanos - totalStartTime) / 1000000 + ";" +
+          measurementName + ";" + latency / 1000);
+      log.debug((intendedStartTimeNanos - totalStartTime) / 1000000 + ";" + (endTimeNanos - totalStartTime) / 1000000 + ";" +
+        "Intended-" + measurementName + ";" + intendedLatency / 1000);
+    }
     _measurements.measure(measurementName,
-        (int)((endTimeNanos-startTimeNanos)/1000));
+        (int) latency);
     _measurements.measureIntended(measurementName,
-        (int)((endTimeNanos-intendedStartTimeNanos)/1000));
+        (int) intendedLatency);
   }
 
   /**

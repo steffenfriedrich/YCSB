@@ -13,10 +13,10 @@ queryHandler:
             journalCommitInterval: 0
             customDelays:
                 # to, from, delay
-                - [primary, secondary1, 2]
-                - [primary, secondary2, 4]
-                - [secondary1, primary, 2]
-                - [secondary2, primary, 4]
+                - [primary, secondary1, 0]
+                - [primary, secondary2, 0]
+                - [secondary1, primary, 0]
+                - [secondary2, primary, 0]
             tagSets:
                 foobar:
                     A: 1
@@ -26,9 +26,9 @@ queryHandler:
             class: de.unihamburg.sickstore.database.Node
             name: primary
             primary: true
-            clientLatency: 2
+            clientLatency: 0
             throughput:
-                max: 10000.0
+                max: 5000.0
                 hickupAfter: 0
                 hickupDuration: 0
             tags:
@@ -37,9 +37,9 @@ queryHandler:
         -
             class: de.unihamburg.sickstore.database.Node
             name: secondary1
-            clientLatency: 2
+            clientLatency: 0
             throughput:
-                max: 10000.0
+                max: 5000.0
                 hickupAfter: 0
                 hickupDuration: 0
             tags:
@@ -47,9 +47,9 @@ queryHandler:
         -
             class: de.unihamburg.sickstore.database.Node
             name: secondary2
-            clientLatency: 2
+            clientLatency: 0
             throughput:
-                max: 10000.0
+                max: 5000.0
                 hickupAfter: 0
                 hickupDuration: 0
             tags:
