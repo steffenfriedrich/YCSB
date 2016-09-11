@@ -31,6 +31,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 public class Measurements {
+
+  private long _totalStartTimeNs = -1;
+  private long _totalIntendedStartTimeNs = -1;
+
   /**
    * All supported measurement types are defined in this enum.
    *
@@ -311,4 +315,17 @@ public class Measurements {
     return ret;
   }
 
+  public long getTotalStartTime(long startTimeNs) {
+    if(_totalStartTimeNs <= 0) {
+      _totalStartTimeNs = startTimeNs;
+    }
+    return _totalStartTimeNs;
+  }
+
+  public long getTotalIntendedStartTime(long intendedStartTimeNs) {
+    if(_totalIntendedStartTimeNs <= 0) {
+      _totalIntendedStartTimeNs = intendedStartTimeNs;
+    }
+    return _totalIntendedStartTimeNs;
+  }
 }

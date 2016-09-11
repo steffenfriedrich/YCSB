@@ -53,7 +53,6 @@ public class DBWrapper extends DB
 
   private static final Logger log = LoggerFactory.getLogger("Timeseries");
   private boolean logtimeseries = true;
-  private long totalStartTime = Long.MAX_VALUE;
 
   private final String SCOPE_STRING_CLEANUP;
   private final String SCOPE_STRING_DELETE;
@@ -188,9 +187,6 @@ public class DBWrapper extends DB
 
   private void measure(String op, Status result, long intendedStartTimeNanos,
       long startTimeNanos, long endTimeNanos) {
-    if(startTimeNanos < totalStartTime) {
-      totalStartTime = intendedStartTimeNanos;
-    }
     String measurementName = op;
     if (result != Status.OK) {
       if (this.reportLatencyForEachError ||
@@ -203,9 +199,11 @@ public class DBWrapper extends DB
     double latency = (endTimeNanos-startTimeNanos)/1000;
     double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000;
     if(logtimeseries) {
-      log.debug((startTimeNanos - totalStartTime) / 1000000  + ";" + (endTimeNanos - totalStartTime) / 1000000 + ";" +
-          measurementName + ";" + latency / 1000);
-      log.debug((intendedStartTimeNanos - totalStartTime) / 1000000 + ";" + (endTimeNanos - totalStartTime) / 1000000 + ";" +
+      long totalStartTime =  _measurements.getTotalStartTime(startTimeNanos);
+      log.debug((startTimeNanos - totalStartTime) / 1000000.0  + ";" + (endTimeNanos - totalStartTime) / 1000000.0 + ";" + measurementName + ";" + latency / 1000);
+
+      long totalIntendedStartTime = _measurements.getTotalIntendedStartTime(intendedStartTimeNanos);
+      log.debug((intendedStartTimeNanos - totalIntendedStartTime) / 1000000.0 + ";" + (endTimeNanos - totalIntendedStartTime) / 1000000.0 + ";" +
         "Intended-" + measurementName + ";" + intendedLatency / 1000);
     }
     _measurements.measure(measurementName,
