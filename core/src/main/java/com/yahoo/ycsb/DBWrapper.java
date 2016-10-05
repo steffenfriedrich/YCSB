@@ -43,16 +43,23 @@ public class DBWrapper extends DB
   private boolean reportLatencyForEachError = false;
   private HashSet<String> latencyTrackedErrors = new HashSet<String>();
 
+
+
   private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY =
-      "reportlatencyforeacherror";
+    "reportlatencyforeacherror";
   private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY_DEFAULT =
-      "false";
+    "false";
 
   private static final String LATENCY_TRACKED_ERRORS_PROPERTY =
       "latencytrackederrors";
 
   private static final Logger log = LoggerFactory.getLogger("Timeseries");
-  private boolean logtimeseries = true;
+  private boolean logtimeseries = false;
+
+  private static final String LOG_TIMESERIES_PROPERTY =
+    "logtimeseries";
+  private static final String LOG_TIMESERIES_PROPERTY_DEFAULT =
+    "false";
 
   private final String SCOPE_STRING_CLEANUP;
   private final String SCOPE_STRING_DELETE;
@@ -114,6 +121,10 @@ public class DBWrapper extends DB
               latencyTrackedErrors.split(",")));
         }
       }
+
+      this.logtimeseries = Boolean.parseBoolean(getProperties().
+        getProperty(LOG_TIMESERIES_PROPERTY,
+          LOG_TIMESERIES_PROPERTY_DEFAULT));
 
       System.err.println("DBWrapper: report latency for each error is " +
           this.reportLatencyForEachError + " and specific error codes to track" +
@@ -196,14 +207,12 @@ public class DBWrapper extends DB
         measurementName = op + "-FAILED";
       }
     }
-    double latency = (endTimeNanos-startTimeNanos)/1000;
-    double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000;
+    double latency = (endTimeNanos-startTimeNanos)/1000.0;
+    double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000.0;
     if(logtimeseries) {
-      long totalStartTime =  _measurements.getTotalStartTime(startTimeNanos);
-      log.debug((startTimeNanos - totalStartTime) / 1000000.0  + ";" + (endTimeNanos - totalStartTime) / 1000000.0 + ";" + measurementName + ";" + latency / 1000);
+      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + measurementName + ";" + latency / 1000);
 
-      long totalIntendedStartTime = _measurements.getTotalIntendedStartTime(intendedStartTimeNanos);
-      log.debug((intendedStartTimeNanos - totalIntendedStartTime) / 1000000.0 + ";" + (endTimeNanos - totalIntendedStartTime) / 1000000.0 + ";" +
+      log.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";" +
         "Intended-" + measurementName + ";" + intendedLatency / 1000);
     }
     _measurements.measure(measurementName,

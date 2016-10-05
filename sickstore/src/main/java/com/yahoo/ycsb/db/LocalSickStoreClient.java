@@ -1,6 +1,7 @@
 package com.yahoo.ycsb.db;
 
 import com.yahoo.ycsb.*;
+import com.yahoo.ycsb.measurements.Measurements;
 import de.unihamburg.sickstore.backend.Version;
 import de.unihamburg.sickstore.database.ReadPreference;
 import de.unihamburg.sickstore.database.WriteConcern;
@@ -24,11 +25,27 @@ public class LocalSickStoreClient extends DB {
      */
     private static final int STATUS_WRONGTYPE_STRINGEXPECTED = -2;
 
-    private de.unihamburg.sickstore.database.client.LocalSickClient client = null;
+
 
     private WriteConcern writeConcern;
 
     private ReadPreference readPreference;
+
+
+  static de.unihamburg.sickstore.database.client.LocalSickClient client = null;
+
+  /**
+   * Return the singleton Measurements object.
+   */
+  private synchronized static de.unihamburg.sickstore.database.client.LocalSickClient getSickClient(String destinationNode, String configFile)
+  {
+    if (client == null)
+    {
+      client = new de.unihamburg.sickstore.database.client.LocalSickClient(destinationNode, configFile);
+    }
+    return client;
+  }
+
     /**
      * Cleanup any state for this DB. Called once per DB instance; there is one
      * DB instance per client thread.
@@ -93,8 +110,8 @@ public class LocalSickStoreClient extends DB {
         String readPreferenceString = props.getProperty("sickstore.read_preference", ReadPreference.PRIMARY);
         readPreference = new ReadPreference(readPreferenceString);
 
-        String configFile = props.getProperty("sickstore.localconfig", "./config/sickstore/config_no_delay.yml");
-        client = new de.unihamburg.sickstore.database.client.LocalSickClient(destinationNode, configFile);
+        String configFile = props.getProperty("sickstore.localconfig");
+        client = LocalSickStoreClient.getSickClient(destinationNode, configFile);
     }
 
     /**
