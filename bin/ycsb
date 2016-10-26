@@ -81,8 +81,11 @@ DATABASES = {
     "orientdb"     : "com.yahoo.ycsb.db.OrientDBClient",
     "rados"        : "com.yahoo.ycsb.db.RadosClient",
     "redis"        : "com.yahoo.ycsb.db.RedisClient",
+    "rest"         : "com.yahoo.ycsb.webservice.rest.RestClient",
     "riak"         : "com.yahoo.ycsb.db.riak.RiakKVClient",
     "s3"           : "com.yahoo.ycsb.db.S3Client",
+    "solr"         : "com.yahoo.ycsb.db.solr.SolrClient",
+    "solr6"        : "com.yahoo.ycsb.db.solr6.SolrClient",
     "sickstore"    : "com.yahoo.ycsb.db.SickStoreClient",
     "solr"         : "com.yahoo.ycsb.db.SolrClient",
     "tarantool"    : "com.yahoo.ycsb.db.TarantoolClient",
@@ -247,10 +250,6 @@ def main():
              "renamed to simply 'cassandra-cql'. This alias will be removed"
              " in the next YCSB release.")
         binding = "cassandra"
-
-    if binding == "couchbase":
-        warn("The 'couchbase' client has been deprecated. If you are using "
-             "Couchbase 4.0+ try using the 'couchbase2' client instead.")
 
     if binding == "couchbase":
         warn("The 'couchbase' client has been deprecated. If you are using "
