@@ -17,6 +17,9 @@
 
 package com.yahoo.ycsb;
 
+import com.yahoo.ycsb.generator.ConstantLongGenerator;
+import com.yahoo.ycsb.generator.ExponentialGenerator;
+import com.yahoo.ycsb.generator.NumberGenerator;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
@@ -368,6 +371,7 @@ class ClientThread implements Runnable {
   private Workload workload;
   private int opcount;
   private double targetOpsPerMs;
+  private String thinkTimeDistribution;
 
   private int opsdone;
   private int threadid;
@@ -375,6 +379,7 @@ class ClientThread implements Runnable {
   private Object workloadstate;
   private Properties props;
   private long targetOpsTickNs;
+  private  NumberGenerator thinkTimeGenerator;
   private final Measurements measurements;
 
   /**
@@ -401,6 +406,17 @@ class ClientThread implements Runnable {
     }
     this.props = props;
     measurements = Measurements.getMeasurements();
+    thinkTimeDistribution = String.valueOf(this.props.getProperty("thinktimedistribution",
+        "constant"));
+
+    switch (thinkTimeDistribution) {
+      case "exponential":
+        thinkTimeGenerator = new ExponentialGenerator(targetOpsTickNs);
+        break;
+      default:
+        thinkTimeGenerator = new ConstantLongGenerator(targetOpsTickNs);
+    }
+
     spinSleep = Boolean.valueOf(this.props.getProperty("spin.sleep", "false"));
     this.completeLatch = completeLatch;
   }
@@ -433,7 +449,7 @@ class ClientThread implements Runnable {
     //spread the thread operations out so they don't all hit the DB at the same time
     // GH issue 4 - throws exception if _target>1 because random.nextInt argument must be >0
     // and the sleep() doesn't make sense for granularities < 1 ms anyway
-    if ((targetOpsPerMs > 0) && (targetOpsPerMs <= 1.0)) {
+    if ((targetOpsPerMs > 0) && (targetOpsPerMs <= 1.0) && thinkTimeDistribution.equals("constant")) {
       long randomMinorDelay = Utils.random().nextInt((int) targetOpsTickNs);
       sleepUntil(System.nanoTime() + randomMinorDelay);
     }
@@ -494,9 +510,9 @@ class ClientThread implements Runnable {
     //throttle the operations
     if (targetOpsPerMs > 0) {
       // delay until next tick
-      long deadline = startTimeNanos + opsdone * targetOpsTickNs;
+      long deadline = System.nanoTime() * targetOpsTickNs;
       sleepUntil(deadline);
-      measurements.setIntendedStartTimeNs(deadline);
+      measurements.setIntendedStartTimeNs(startTimeNanos + opsdone * targetOpsTickNs);
     }
   }
 
