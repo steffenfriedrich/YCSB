@@ -112,6 +112,9 @@ table=usertable
 # The column family of fields (required by some databases)
 #columnfamily=
 
+# Distribution used to generate think (inter request) time.
+thinktimedistribution=constant
+
 # How the latency measurements are presented
 measurementtype=histogram
 #measurementtype=timeseries
