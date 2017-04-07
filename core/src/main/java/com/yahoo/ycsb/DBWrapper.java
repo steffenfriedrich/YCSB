@@ -18,8 +18,11 @@
 package com.yahoo.ycsb;
 
 import com.yahoo.ycsb.measurements.Measurements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.htrace.core.TraceScope;
+import org.apache.htrace.core.Tracer;
+
+import java.util.*;
+
 /**
  * Wrapper around a "real" DB that measures latencies and counts return codes.
  * Also reports latency separately between OK and failed operations.
@@ -32,30 +35,18 @@ public class DBWrapper extends DB {
   private boolean reportLatencyForEachError = false;
   private HashSet<String> latencyTrackedErrors = new HashSet<String>();
 
-
-
-  private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY =
-    "reportlatencyforeacherror";
-  private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY_DEFAULT =
-    "false";
+  private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY = "reportlatencyforeacherror";
+  private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY_DEFAULT = "false";
 
   private static final String LATENCY_TRACKED_ERRORS_PROPERTY = "latencytrackederrors";
 
-  private static final Logger log = LoggerFactory.getLogger("Timeseries");
-  private boolean logtimeseries = false;
-
-  private static final String LOG_TIMESERIES_PROPERTY =
-    "logtimeseries";
-  private static final String LOG_TIMESERIES_PROPERTY_DEFAULT =
-    "false";
-
-  private final String SCOPE_STRING_CLEANUP;
-  private final String SCOPE_STRING_DELETE;
-  private final String SCOPE_STRING_INIT;
-  private final String SCOPE_STRING_INSERT;
-  private final String SCOPE_STRING_READ;
-  private final String SCOPE_STRING_SCAN;
-  private final String SCOPE_STRING_UPDATE;
+  private final String scopeStringCleanup;
+  private final String scopeStringDelete;
+  private final String scopeStringInit;
+  private final String scopeStringInsert;
+  private final String scopeStringRead;
+  private final String scopeStringScan;
+  private final String scopeStringUpdate;
 
   public DBWrapper(final DB db, final Tracer tracer) {
     this.db = db;
@@ -104,10 +95,6 @@ public class DBWrapper extends DB {
               latencyTrackedErrorsProperty.split(",")));
         }
       }
-
-      this.logtimeseries = Boolean.parseBoolean(getProperties().
-        getProperty(LOG_TIMESERIES_PROPERTY,
-          LOG_TIMESERIES_PROPERTY_DEFAULT));
 
       System.err.println("DBWrapper: report latency for each error is " +
           this.reportLatencyForEachError + " and specific error codes to track" +
@@ -191,18 +178,6 @@ public class DBWrapper extends DB {
         (int) ((endTimeNanos - startTimeNanos) / 1000));
     measurements.measureIntended(measurementName,
         (int) ((endTimeNanos - intendedStartTimeNanos) / 1000));
-    double latency = (endTimeNanos-startTimeNanos)/1000.0;
-    double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000.0;
-    if(logtimeseries) {
-      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + measurementName + ";" + latency / 1000);
-
-      log.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";" +
-        "Intended-" + measurementName + ";" + intendedLatency / 1000);
-    }
-    _measurements.measure(measurementName,
-        (int) latency);
-    _measurements.measureIntended(measurementName,
-        (int) intendedLatency);
   }
 
   /**
