@@ -19,6 +19,7 @@ package com.yahoo.ycsb;
 
 import com.yahoo.ycsb.generator.ConstantLongGenerator;
 import com.yahoo.ycsb.generator.ExponentialGenerator;
+import com.yahoo.ycsb.generator.FileLongGenerator;
 import com.yahoo.ycsb.generator.NumberGenerator;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
@@ -374,6 +375,7 @@ class ClientThread implements Runnable {
   private String thinkTimeDistribution;
 
   private int opsdone;
+  long deadline = 0;
   private int threadid;
   private int threadcount;
   private Object workloadstate;
@@ -412,6 +414,11 @@ class ClientThread implements Runnable {
     switch (thinkTimeDistribution) {
       case "exponential":
         thinkTimeGenerator = new ExponentialGenerator(targetOpsTickNs);
+        break;
+      case "file":
+        String thinkTimeFile = String.valueOf(this.props.getProperty("thinktimefile",
+            "workloads/thinktime.txt"));
+        thinkTimeGenerator = new FileLongGenerator(thinkTimeFile);
         break;
       default:
         thinkTimeGenerator = new ConstantLongGenerator(targetOpsTickNs);
@@ -510,7 +517,14 @@ class ClientThread implements Runnable {
     //throttle the operations
     if (targetOpsPerMs > 0) {
       // delay until next tick
-      long deadline = startTimeNanos + opsdone * thinkTimeGenerator.nextValue().longValue();
+      long thinkTime = thinkTimeGenerator.nextValue().longValue();
+      long now = System.nanoTime();
+      if(deadline == 0) {
+        deadline = now + thinkTime;
+      } else {
+        deadline = deadline + thinkTime;
+      }
+      measurements.measure("THINKTIME", (int) thinkTime / 1000);
       sleepUntil(deadline);
       measurements.setIntendedStartTimeNs(deadline);
     }

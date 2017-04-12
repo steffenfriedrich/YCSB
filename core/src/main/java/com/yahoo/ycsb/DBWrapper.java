@@ -20,6 +20,8 @@ package com.yahoo.ycsb;
 import com.yahoo.ycsb.measurements.Measurements;
 import org.apache.htrace.core.TraceScope;
 import org.apache.htrace.core.Tracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -39,6 +41,14 @@ public class DBWrapper extends DB {
   private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY_DEFAULT = "false";
 
   private static final String LATENCY_TRACKED_ERRORS_PROPERTY = "latencytrackederrors";
+
+  private static final Logger log = LoggerFactory.getLogger("Timeseries");
+  private boolean logtimeseries = false;
+
+  private static final String LOG_TIMESERIES_PROPERTY =
+      "logtimeseries";
+  private static final String LOG_TIMESERIES_PROPERTY_DEFAULT =
+      "false";
 
   private final String scopeStringCleanup;
   private final String scopeStringDelete;
@@ -95,6 +105,10 @@ public class DBWrapper extends DB {
               latencyTrackedErrorsProperty.split(",")));
         }
       }
+
+      this.logtimeseries = Boolean.parseBoolean(getProperties().
+          getProperty(LOG_TIMESERIES_PROPERTY,
+              LOG_TIMESERIES_PROPERTY_DEFAULT));
 
       System.err.println("DBWrapper: report latency for each error is " +
           this.reportLatencyForEachError + " and specific error codes to track" +
@@ -174,10 +188,19 @@ public class DBWrapper extends DB {
         measurementName = op + "-FAILED";
       }
     }
+    double latency = (endTimeNanos - startTimeNanos) / 1000.0;
+    double intendedLatency = (endTimeNanos - intendedStartTimeNanos) / 1000.0;
+    if(logtimeseries) {
+      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + measurementName + ";" + latency / 1000);
+
+      log.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";" +
+          "Intended-" + measurementName + ";" + intendedLatency / 1000);
+    }
+
     measurements.measure(measurementName,
-        (int) ((endTimeNanos - startTimeNanos) / 1000));
+        (int) latency);
     measurements.measureIntended(measurementName,
-        (int) ((endTimeNanos - intendedStartTimeNanos) / 1000));
+        (int) intendedLatency);
   }
 
   /**
