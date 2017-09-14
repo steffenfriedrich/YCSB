@@ -17,6 +17,7 @@
 
 package com.yahoo.ycsb;
 
+import java.util.Map;
 import com.yahoo.ycsb.measurements.Measurements;
 import org.apache.htrace.core.TraceScope;
 import org.apache.htrace.core.Tracer;
@@ -35,7 +36,7 @@ public class DBWrapper extends DB {
   private final Tracer tracer;
 
   private boolean reportLatencyForEachError = false;
-  private HashSet<String> latencyTrackedErrors = new HashSet<String>();
+  private Set<String> latencyTrackedErrors = new HashSet<String>();
 
   private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY = "reportlatencyforeacherror";
   private static final String REPORT_LATENCY_FOR_EACH_ERROR_PROPERTY_DEFAULT = "false";
@@ -141,7 +142,7 @@ public class DBWrapper extends DB {
    * @return The result of the operation.
    */
   public Status read(String table, String key, Set<String> fields,
-                     HashMap<String, ByteIterator> result) {
+                     Map<String, ByteIterator> result) {
     try (final TraceScope span = tracer.newScope(scopeStringRead)) {
       long ist = measurements.getIntendedtartTimeNs();
       long st = System.nanoTime();
@@ -220,7 +221,7 @@ public class DBWrapper extends DB {
    * @return The result of the operation.
    */
   public Status update(String table, String key,
-                       HashMap<String, ByteIterator> values) {
+                       Map<String, ByteIterator> values) {
     try (final TraceScope span = tracer.newScope(scopeStringUpdate)) {
       long ist = measurements.getIntendedtartTimeNs();
       long st = System.nanoTime();
@@ -243,7 +244,7 @@ public class DBWrapper extends DB {
    * @return The result of the operation.
    */
   public Status insert(String table, String key,
-                       HashMap<String, ByteIterator> values) {
+                       Map<String, ByteIterator> values) {
     try (final TraceScope span = tracer.newScope(scopeStringInsert)) {
       long ist = measurements.getIntendedtartTimeNs();
       long st = System.nanoTime();
