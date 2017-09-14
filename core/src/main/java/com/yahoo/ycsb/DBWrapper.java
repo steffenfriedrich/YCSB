@@ -188,6 +188,10 @@ public class DBWrapper extends DB {
         measurementName = op + "-FAILED";
       }
     }
+    if(startTimeNanos > intendedStartTimeNanos){
+      log.warn(startTimeNanos + " > " + intendedStartTimeNanos + " diff = " +  (startTimeNanos - intendedStartTimeNanos) / 1000000);
+    }
+
     measurements.measure(measurementName,
         (int) ((endTimeNanos - startTimeNanos) / 1000));
     measurements.measureIntended(measurementName,
