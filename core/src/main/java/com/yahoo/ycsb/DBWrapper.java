@@ -46,10 +46,8 @@ public class DBWrapper extends DB {
   private static final Logger log = LoggerFactory.getLogger("Timeseries");
   private boolean logtimeseries = false;
 
-  private static final String LOG_TIMESERIES_PROPERTY =
-    "logtimeseries";
-  private static final String LOG_TIMESERIES_PROPERTY_DEFAULT =
-    "false";
+  private static final String LOG_TIMESERIES_PROPERTY = "logtimeseries";
+  private static final String LOG_TIMESERIES_PROPERTY_DEFAULT = "false";
 
   private final String scopeStringCleanup;
   private final String scopeStringDelete;

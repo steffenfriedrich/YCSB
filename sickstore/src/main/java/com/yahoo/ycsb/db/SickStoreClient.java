@@ -122,7 +122,7 @@ public class SickStoreClient extends DB {
      */
     @Override
     public Status insert(String table, String key,
-                      HashMap<String, ByteIterator> values) {
+                      Map<String, ByteIterator> values) {
         try {
             Version version = new Version();
             for (String k : values.keySet()) {
@@ -153,7 +153,7 @@ public class SickStoreClient extends DB {
      */
     @Override
     public Status read(String table, String key, Set<String> fields,
-                    HashMap<String, ByteIterator> result) {
+                    Map<String, ByteIterator> result) {
         try {
             Version version = null;
             try {
@@ -256,7 +256,7 @@ public class SickStoreClient extends DB {
      */
     @Override
     public Status update(String table, String key,
-                      HashMap<String, ByteIterator> values) {
+                      Map<String, ByteIterator> values) {
         try {
             Version version = new Version();
             for (String column : values.keySet()) {
