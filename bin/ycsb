@@ -56,19 +56,21 @@ DATABASES = {
     "arangodb"     : "com.yahoo.ycsb.db.ArangoDBClient",
     "arangodb3"    : "com.yahoo.ycsb.db.arangodb.ArangoDB3Client",
     "asynchbase"   : "com.yahoo.ycsb.db.AsyncHBaseClient",
+    "azuredocumentdb"   : "com.yahoo.ycsb.db.azuredocumentdb.AzureDocumentDBClient",
+    "azuretablestorage" : "com.yahoo.ycsb.db.azuretablestorage.AzureClient",
     "basic"        : "com.yahoo.ycsb.BasicDB",
+    "basicts"      : "com.yahoo.ycsb.BasicTSDB",
     "cassandra-cql": "com.yahoo.ycsb.db.CassandraCQLClient",
     "cassandra2-cql": "com.yahoo.ycsb.db.CassandraCQLClient",
     "cloudspanner" : "com.yahoo.ycsb.db.cloudspanner.CloudSpannerClient",
     "couchbase"    : "com.yahoo.ycsb.db.CouchbaseClient",
     "couchbase2"   : "com.yahoo.ycsb.db.couchbase2.Couchbase2Client",
-    "azuredocumentdb" : "com.yahoo.ycsb.db.azuredocumentdb.AzureDocumentDBClient",
     "dynamodb"     : "com.yahoo.ycsb.db.DynamoDBClient",
     "elasticsearch": "com.yahoo.ycsb.db.ElasticsearchClient",
+    "elasticsearch5": "com.yahoo.ycsb.db.elasticsearch5.ElasticsearchClient",
     "geode"        : "com.yahoo.ycsb.db.GeodeClient",
     "googlebigtable"  : "com.yahoo.ycsb.db.GoogleBigtableClient",
     "googledatastore" : "com.yahoo.ycsb.db.GoogleDatastoreClient",
-    "hbase094"     : "com.yahoo.ycsb.db.HBaseClient",
     "hbase098"     : "com.yahoo.ycsb.db.HBaseClient",
     "hbase10"      : "com.yahoo.ycsb.db.HBaseClient10",
     "hbase12"      : "com.yahoo.ycsb.db.hbase12.HBaseClient12",
@@ -77,7 +79,6 @@ DATABASES = {
     "infinispan"   : "com.yahoo.ycsb.db.InfinispanClient",
     "jdbc"         : "com.yahoo.ycsb.db.JdbcDBClient",
     "kudu"         : "com.yahoo.ycsb.db.KuduYCSBClient",
-    "mapkeeper"    : "com.yahoo.ycsb.db.MapKeeperClient",
     "memcached"    : "com.yahoo.ycsb.db.MemcachedClient",
     "mongodb"      : "com.yahoo.ycsb.db.MongoDbClient",
     "mongodb-async": "com.yahoo.ycsb.db.AsyncMongoDbClient",
@@ -93,7 +94,6 @@ DATABASES = {
     "sickstore"    : "com.yahoo.ycsb.db.SickStoreClient",
     "solr"         : "com.yahoo.ycsb.db.SolrClient",
     "tarantool"    : "com.yahoo.ycsb.db.TarantoolClient",
-    "voldemort"    : "com.yahoo.ycsb.db.VoldemortClient"
 }
 
 OPTIONS = {
@@ -271,8 +271,8 @@ def main():
         warn("Running against a source checkout. In order to get our runtime "
              "dependencies we'll have to invoke Maven. Depending on the state "
              "of your system, this may take ~30-45 seconds")
-        db_location = "core" if binding == "basic" else binding
-        project = "core" if binding == "basic" else binding + "-binding"
+        db_location = "core" if (binding == "basic" or binding == "basicts") else binding
+        project = "core" if (binding == "basic" or binding == "basicts") else binding + "-binding"
         db_dir = os.path.join(ycsb_home, db_location)
         # goes first so we can rely on side-effect of package
         maven_says = get_classpath_from_maven(project)
