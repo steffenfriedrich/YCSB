@@ -43,7 +43,7 @@ public class DBWrapper extends DB {
 
   private static final String LATENCY_TRACKED_ERRORS_PROPERTY = "latencytrackederrors";
 
-  private static final Logger log = LoggerFactory.getLogger("Timeseries");
+  private final Logger log = LoggerFactory.getLogger("Timeseries");
   private boolean logtimeseries = false;
 
   private static final String LOG_TIMESERIES_PROPERTY = "logtimeseries";
@@ -188,15 +188,17 @@ public class DBWrapper extends DB {
       }
     }
     if(startTimeNanos > intendedStartTimeNanos){
-      log.warn(startTimeNanos + " > " + intendedStartTimeNanos + " diff = " +  (startTimeNanos - intendedStartTimeNanos) / 1000000);
+      log.warn(startTimeNanos + " > " + intendedStartTimeNanos + " diff = " +  (startTimeNanos - intendedStartTimeNanos)
+          / 1000000);
     }
     double latency = (endTimeNanos-startTimeNanos)/1000.0;
     double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000.0;
     if(logtimeseries) {
-      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + measurementName + ";" + latency / 1000);
+      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + measurementName + ";" + latency
+          / 1000);
 
       log.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";" +
-        "Intended-" + measurementName + ";" + intendedLatency / 1000);
+          "Intended-" + measurementName + ";" + intendedLatency / 1000);
     }
     measurements.measure(measurementName,
         (int) latency);

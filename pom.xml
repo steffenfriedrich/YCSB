@@ -109,6 +109,8 @@ LICENSE file.
     <tarantool.version>1.6.5</tarantool.version>
     <thrift.version>0.8.0</thrift.version>
     <voldemort.version>0.81</voldemort.version>
+    <tarantool.version>1.6.5</tarantool.version>
+    <thrift.version>0.8.0</thrift.version>
   </properties>
 
   <modules>
@@ -198,8 +200,8 @@ LICENSE file.
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.7.0</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
       <plugin>
