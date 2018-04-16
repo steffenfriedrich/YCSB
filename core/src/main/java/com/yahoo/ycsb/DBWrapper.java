@@ -190,11 +190,6 @@ public class DBWrapper extends DB {
     if(startTimeNanos > intendedStartTimeNanos){
       log.warn(startTimeNanos + " > " + intendedStartTimeNanos + " diff = " +  (startTimeNanos - intendedStartTimeNanos) / 1000000);
     }
-
-    measurements.measure(measurementName,
-        (int) ((endTimeNanos - startTimeNanos) / 1000));
-    measurements.measureIntended(measurementName,
-        (int) ((endTimeNanos - intendedStartTimeNanos) / 1000));
     double latency = (endTimeNanos-startTimeNanos)/1000.0;
     double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000.0;
     if(logtimeseries) {

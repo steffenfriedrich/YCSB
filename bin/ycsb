@@ -52,6 +52,9 @@ COMMANDS = {
 
 DATABASES = {
     "accumulo"     : "com.yahoo.ycsb.db.accumulo.AccumuloClient",
+    "accumulo1.6"     : "com.yahoo.ycsb.db.accumulo.AccumuloClient",
+    "accumulo1.7"     : "com.yahoo.ycsb.db.accumulo.AccumuloClient",
+    "accumulo1.8"     : "com.yahoo.ycsb.db.accumulo.AccumuloClient",
     "aerospike"    : "com.yahoo.ycsb.db.AerospikeClient",
     "arangodb"     : "com.yahoo.ycsb.db.ArangoDBClient",
     "arangodb3"    : "com.yahoo.ycsb.db.arangodb.ArangoDB3Client",
@@ -74,6 +77,8 @@ DATABASES = {
     "hbase098"     : "com.yahoo.ycsb.db.HBaseClient",
     "hbase10"      : "com.yahoo.ycsb.db.HBaseClient10",
     "hbase12"      : "com.yahoo.ycsb.db.hbase12.HBaseClient12",
+    "hbase14"      : "com.yahoo.ycsb.db.hbase14.HBaseClient14",
+    "hbase20"      : "com.yahoo.ycsb.db.hbase20.HBaseClient20",
     "hypertable"   : "com.yahoo.ycsb.db.HypertableClient",
     "infinispan-cs": "com.yahoo.ycsb.db.InfinispanRemoteClient",
     "infinispan"   : "com.yahoo.ycsb.db.InfinispanClient",
@@ -92,7 +97,6 @@ DATABASES = {
     "solr"         : "com.yahoo.ycsb.db.solr.SolrClient",
     "solr6"        : "com.yahoo.ycsb.db.solr6.SolrClient",
     "sickstore"    : "com.yahoo.ycsb.db.SickStoreClient",
-    "solr"         : "com.yahoo.ycsb.db.SolrClient",
     "tarantool"    : "com.yahoo.ycsb.db.TarantoolClient",
 }
 
