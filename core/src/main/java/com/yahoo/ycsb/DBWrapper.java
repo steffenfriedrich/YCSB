@@ -49,6 +49,10 @@ public class DBWrapper extends DB {
   private static final String LOG_TIMESERIES_PROPERTY = "logtimeseries";
   private static final String LOG_TIMESERIES_PROPERTY_DEFAULT = "false";
 
+  private boolean logkeys = false;
+  private static final String LOG_KEYS_PROPERTY = "logkeys";
+  private static final String LOG_KEYS_PROPERTY_DEFAULT = "false";
+
   private final String scopeStringCleanup;
   private final String scopeStringDelete;
   private final String scopeStringInit;
@@ -69,6 +73,13 @@ public class DBWrapper extends DB {
     scopeStringRead = simple + "#read";
     scopeStringScan = simple + "#scan";
     scopeStringUpdate = simple + "#update";
+
+    this.logkeys = Boolean.parseBoolean(getProperties().
+        getProperty(LOG_KEYS_PROPERTY,
+            LOG_KEYS_PROPERTY_DEFAULT));
+    if(this.logkeys) {
+
+    }
   }
 
   /**
