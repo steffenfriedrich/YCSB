@@ -846,7 +846,7 @@ public class TimeSeriesWorkload extends Workload {
     final ThreadState state = (ThreadState) threadstate;
     final Random random = ThreadLocalRandom.current();
     final StringBuilder buf = new StringBuilder().append(keys[random.nextInt(keys.length)]);
-
+    
     int offsets = random.nextInt(maxOffsets - 1);
     final long startTimestamp;
     if (offsets > 0) {
