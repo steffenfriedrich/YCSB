@@ -43,11 +43,16 @@ public class DBWrapper extends DB {
 
   private static final String LATENCY_TRACKED_ERRORS_PROPERTY = "latencytrackederrors";
 
-  private final Logger log = LoggerFactory.getLogger("Timeseries");
   private boolean logtimeseries = false;
-
   private static final String LOG_TIMESERIES_PROPERTY = "logtimeseries";
   private static final String LOG_TIMESERIES_PROPERTY_DEFAULT = "false";
+
+  private static final String LOG_TIMERSIES_OUTPUT_PROPERTY = "timseries.output.path";
+  private static final String LOG_TIMESERIES_OUTPUT_PROPERTY_DEFAULT = "results/";
+
+
+  private Logger log;
+  private Logger log_intended;
 
   private final String scopeStringCleanup;
   private final String scopeStringDelete;
@@ -90,6 +95,15 @@ public class DBWrapper extends DB {
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void init() throws DBException {
+    this.logtimeseries = Boolean.parseBoolean(getProperties().
+        getProperty(LOG_TIMESERIES_PROPERTY,
+            LOG_TIMESERIES_PROPERTY_DEFAULT));
+    String timeseriesoutput = getProperties().getProperty(LOG_TIMERSIES_OUTPUT_PROPERTY,
+        LOG_TIMESERIES_OUTPUT_PROPERTY_DEFAULT);
+    System.setProperty(LOG_TIMERSIES_OUTPUT_PROPERTY, timeseriesoutput);
+    log = LoggerFactory.getLogger("Timeseries");
+    log_intended = LoggerFactory.getLogger("TimeseriesIntended");
+
     try (final TraceScope span = tracer.newScope(scopeStringInit)) {
       db.init();
 
@@ -104,10 +118,6 @@ public class DBWrapper extends DB {
               latencyTrackedErrorsProperty.split(",")));
         }
       }
-
-      this.logtimeseries = Boolean.parseBoolean(getProperties().
-        getProperty(LOG_TIMESERIES_PROPERTY,
-          LOG_TIMESERIES_PROPERTY_DEFAULT));
 
       System.err.println("DBWrapper: report latency for each error is " +
           this.reportLatencyForEachError + " and specific error codes to track" +
@@ -125,7 +135,7 @@ public class DBWrapper extends DB {
       long st = System.nanoTime();
       db.cleanup();
       long en = System.nanoTime();
-      measure("CLEANUP", Status.OK, ist, st, en);
+      measure("CLEANUP", "", Status.OK, ist, st, en);
     }
   }
 
@@ -146,7 +156,7 @@ public class DBWrapper extends DB {
       long st = System.nanoTime();
       Status res = db.read(table, key, fields, result);
       long en = System.nanoTime();
-      measure("READ", res, ist, st, en);
+      measure("READ", key, res, ist, st, en);
       measurements.reportStatus("READ", res);
       return res;
     }
@@ -170,13 +180,13 @@ public class DBWrapper extends DB {
       long st = System.nanoTime();
       Status res = db.scan(table, startkey, recordcount, fields, result);
       long en = System.nanoTime();
-      measure("SCAN", res, ist, st, en);
+      measure("SCAN", startkey, res, ist, st, en);
       measurements.reportStatus("SCAN", res);
       return res;
     }
   }
 
-  private void measure(String op, Status result, long intendedStartTimeNanos,
+  private void measure(String op, String key, Status result, long intendedStartTimeNanos,
                        long startTimeNanos, long endTimeNanos) {
     String measurementName = op;
     if (result == null || !result.isOk()) {
@@ -187,23 +197,21 @@ public class DBWrapper extends DB {
         measurementName = op + "-FAILED";
       }
     }
-    if(startTimeNanos > intendedStartTimeNanos){
-      log.warn(startTimeNanos + " > " + intendedStartTimeNanos + " diff = " +  (startTimeNanos - intendedStartTimeNanos)
-          / 1000000);
-    }
+//    if(startTimeNanos > intendedStartTimeNanos){
+//      log.warn(startTimeNanos + " > " + intendedStartTimeNanos + " diff = " +  (startTimeNanos - intendedStartTimeNanos)
+//          / 1000000);
+//    }
     double latency = (endTimeNanos-startTimeNanos)/1000.0;
     double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000.0;
     if(logtimeseries) {
-      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + measurementName + ";" + latency
-          / 1000);
+      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + key + ";" +
+          measurementName + ";" + latency / 1000);
 
-      log.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";" +
+      log_intended.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";" + key + ";" +
           "Intended-" + measurementName + ";" + intendedLatency / 1000);
     }
-    measurements.measure(measurementName,
-        (int) latency);
-    measurements.measureIntended(measurementName,
-        (int) intendedLatency);
+    measurements.measure(measurementName, (int) latency);
+    measurements.measureIntended(measurementName, (int) intendedLatency);
   }
 
   /**
@@ -222,7 +230,7 @@ public class DBWrapper extends DB {
       long st = System.nanoTime();
       Status res = db.update(table, key, values);
       long en = System.nanoTime();
-      measure("UPDATE", res, ist, st, en);
+      measure("UPDATE", key, res, ist, st, en);
       measurements.reportStatus("UPDATE", res);
       return res;
     }
@@ -245,7 +253,7 @@ public class DBWrapper extends DB {
       long st = System.nanoTime();
       Status res = db.insert(table, key, values);
       long en = System.nanoTime();
-      measure("INSERT", res, ist, st, en);
+      measure("INSERT", key, res, ist, st, en);
       measurements.reportStatus("INSERT", res);
       return res;
     }
@@ -264,7 +272,7 @@ public class DBWrapper extends DB {
       long st = System.nanoTime();
       Status res = db.delete(table, key);
       long en = System.nanoTime();
-      measure("DELETE", res, ist, st, en);
+      measure("DELETE", key, res, ist, st, en);
       measurements.reportStatus("DELETE", res);
       return res;
     }
