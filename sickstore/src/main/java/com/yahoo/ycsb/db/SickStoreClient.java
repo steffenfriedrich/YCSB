@@ -7,9 +7,8 @@ import de.unihamburg.sickstore.database.ReadPreference;
 import de.unihamburg.sickstore.database.WriteConcern;
 import de.unihamburg.sickstore.database.messages.exception.DatabaseException;
 
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Steffen Friedrich on 12.11.2015.
@@ -28,11 +27,18 @@ public class SickStoreClient extends DB {
      */
     private static final int STATUS_WRONGTYPE_STRINGEXPECTED = -2;
 
-    private de.unihamburg.sickstore.database.client.SickStoreClient client = null;
-
     private WriteConcern writeConcern;
 
     private ReadPreference readPreference;
+
+
+    private static de.unihamburg.sickstore.database.client.SickStoreClient client = null;
+
+    /**
+     * Count the number of times initialized to teardown on the last
+     * {@link #cleanup()}.
+     */
+    private static final AtomicInteger INIT_COUNT = new AtomicInteger(0);
 
     /**
      * Cleanup any state for this DB. Called once per DB instance; there is one
@@ -40,12 +46,22 @@ public class SickStoreClient extends DB {
      */
     @Override
     public void cleanup() throws DBException {
+      synchronized (INIT_COUNT) {
+        final int curInitCount = INIT_COUNT.decrementAndGet();
         try {
+          if (curInitCount <= 0) {
             client.cleanup("");
+            client.disconnect();
+          }
+          if (curInitCount < 0) {
+            // This should never happen.
+            throw new DBException(
+                String.format("initCount is negative: %d", curInitCount));
+          }
         } catch (Exception e) {
-            e.printStackTrace();
+          e.printStackTrace();
         }
-        client.disconnect();
+      }
     }
 
     /**
@@ -75,12 +91,20 @@ public class SickStoreClient extends DB {
      */
     @Override
     public void init() throws DBException {
+      // Keep track of number of calls to init (for later cleanup)
+      INIT_COUNT.incrementAndGet();
+
+      // Check if the cluster has already been initialized
+      if (client != null) {
+        return;
+      }
+
       // initialize SickStore driver
       Properties props = getProperties();
       String url = props.getProperty("sickstore.url", "localhost");
       int port = Integer.parseInt(props.getProperty("sickstore.port", "54000"));
 
-      int maxconnections = Integer.parseInt(props.getProperty("sickstore.maxconnections", "2"));
+      int maxconnections = Integer.parseInt(props.getProperty("sickstore.maxconnections", "64"));
 
       // configure write concern
       writeConcern = new WriteConcern();

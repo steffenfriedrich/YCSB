@@ -41,12 +41,12 @@
 
 	<appender name="TIMESERIES-FILE"
 			  class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${timseries.output.path}/timseries.log</file>
+		<file>${timeseries.output.path}/timseries.log</file>
 		<encoder>
 			<pattern>%date{ISO8601};%msg%n</pattern>
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${timseries.output.path}/timseries-%d{yyyyMMdd_HH}%d{mmss}.%i.log</fileNamePattern>
+      <fileNamePattern>${timeseries.output.path}/timseries-%d{yyyyMMdd_HH}%d{mmss}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy class="com.yahoo.ycsb.db.MyTrigger">
         <maxFileSize>50MB</maxFileSize>
       </timeBasedFileNamingAndTriggeringPolicy>
@@ -55,12 +55,12 @@
 
   <appender name="TIMESERIES-INTENDED-FILE"
             class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${timseries.output.path}/timseries_intended.log</file>
+    <file>${timeseries.output.path}/timseries_intended.log</file>
     <encoder>
       <pattern>%date{ISO8601};%msg%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${timseries.output.path}/timseries_intended-%d{yyyyMMdd_HH}%d{mmss}.%i.log</fileNamePattern>
+      <fileNamePattern>${timeseries.output.path}/timseries_intended-%d{yyyyMMdd_HH}%d{mmss}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy class="com.yahoo.ycsb.db.MyTrigger">
         <maxFileSize>50MB</maxFileSize>
       </timeBasedFileNamingAndTriggeringPolicy>

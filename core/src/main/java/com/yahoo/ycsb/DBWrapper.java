@@ -17,6 +17,7 @@
 
 package com.yahoo.ycsb;
 
+import java.io.File;
 import java.util.Map;
 import com.yahoo.ycsb.measurements.Measurements;
 import org.apache.htrace.core.TraceScope;
@@ -47,7 +48,7 @@ public class DBWrapper extends DB {
   private static final String LOG_TIMESERIES_PROPERTY = "logtimeseries";
   private static final String LOG_TIMESERIES_PROPERTY_DEFAULT = "false";
 
-  private static final String LOG_TIMERSIES_OUTPUT_PROPERTY = "timseries.output.path";
+  private static final String LOG_TIMERSIES_OUTPUT_PROPERTY = "timeseries.output.path";
   private static final String LOG_TIMESERIES_OUTPUT_PROPERTY_DEFAULT = "results/";
 
 
@@ -64,6 +65,15 @@ public class DBWrapper extends DB {
 
   public DBWrapper(final DB db, final Tracer tracer) {
     this.db = db;
+    this.logtimeseries = Boolean.parseBoolean(getProperties().getProperty(LOG_TIMESERIES_PROPERTY,
+            LOG_TIMESERIES_PROPERTY_DEFAULT));
+    String timeseriesoutput = getProperties().getProperty(LOG_TIMERSIES_OUTPUT_PROPERTY,
+        LOG_TIMESERIES_OUTPUT_PROPERTY_DEFAULT);
+    System.setProperty(LOG_TIMERSIES_OUTPUT_PROPERTY, timeseriesoutput);
+    new File(timeseriesoutput).mkdirs();
+    log = LoggerFactory.getLogger("Timeseries");
+    log_intended = LoggerFactory.getLogger("TimeseriesIntended");
+
     measurements = Measurements.getMeasurements();
     this.tracer = tracer;
     final String simple = db.getClass().getSimpleName();
@@ -95,15 +105,6 @@ public class DBWrapper extends DB {
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void init() throws DBException {
-    this.logtimeseries = Boolean.parseBoolean(getProperties().
-        getProperty(LOG_TIMESERIES_PROPERTY,
-            LOG_TIMESERIES_PROPERTY_DEFAULT));
-    String timeseriesoutput = getProperties().getProperty(LOG_TIMERSIES_OUTPUT_PROPERTY,
-        LOG_TIMESERIES_OUTPUT_PROPERTY_DEFAULT);
-    System.setProperty(LOG_TIMERSIES_OUTPUT_PROPERTY, timeseriesoutput);
-    log = LoggerFactory.getLogger("Timeseries");
-    log_intended = LoggerFactory.getLogger("TimeseriesIntended");
-
     try (final TraceScope span = tracer.newScope(scopeStringInit)) {
       db.init();
 
@@ -201,14 +202,13 @@ public class DBWrapper extends DB {
 //      log.warn(startTimeNanos + " > " + intendedStartTimeNanos + " diff = " +  (startTimeNanos - intendedStartTimeNanos)
 //          / 1000000);
 //    }
-    double latency = (endTimeNanos-startTimeNanos)/1000.0;
-    double intendedLatency = (endTimeNanos-intendedStartTimeNanos)/1000.0;
-    if(logtimeseries) {
-      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + key + ";" +
-          measurementName + ";" + latency / 1000);
-
-      log_intended.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";" + key + ";" +
-          "Intended-" + measurementName + ";" + intendedLatency / 1000);
+    double latency = (endTimeNanos - startTimeNanos) / 1000.0;
+    double intendedLatency = (endTimeNanos - intendedStartTimeNanos) / 1000.0;
+    if(logtimeseries && !op.equals("CLEANUP")) {
+      log.debug((startTimeNanos / 1000000.0)  + ";" + (endTimeNanos / 1000000.0) + ";" + measurementName + ";" +
+           key + ";" + latency / 1000.0);
+      log_intended.debug((intendedStartTimeNanos / 1000000.0) + ";" + (endTimeNanos / 1000000.0) + ";Intended-" +
+          measurementName  + ";" + key + ";" + intendedLatency / 1000.0);
     }
     measurements.measure(measurementName, (int) latency);
     measurements.measureIntended(measurementName, (int) intendedLatency);
