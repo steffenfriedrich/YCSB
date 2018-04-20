@@ -20,6 +20,10 @@ package com.yahoo.ycsb;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.barriers.DistributedDoubleBarrier;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.htrace.core.HTraceConfiguration;
 import org.apache.htrace.core.TraceScope;
 import org.apache.htrace.core.Tracer;
@@ -614,6 +618,18 @@ public final class Client {
   private static final String CLIENT_CLEANUP_SPAN = "Client#cleanup";
   private static final String CLIENT_EXPORT_MEASUREMENTS_SPAN = "Client#export_measurements";
 
+  /**
+   * Zookeeper barrier properties for multi client coordination
+   */
+  private static final String MULTICLIENT_BARRIER_PROPERTY="multiclient.barrier";
+  private static final String MULTICLIENT_BARRIER_DEFAULT="false";
+  private static final String MULTICLIENT_ZOOKEEPER_SERVER="multiclient.zk.url";
+  private static final String MULTICLIENT_ZOOKEEPER_SERVER_DEFAULT="127.0.0.1:2181";
+  private static final String MULTICLIENT_BARRIER_PATH="multiclient.barrier.path";
+  private static final String MULTICLIENT_BARRIER_PATH_DEFAULT="ycsb/barrier";
+  private static final String MULTICLIENT_BARRIER_SIZE="multiclient.barrier.size";
+  private static final String MULTICLIENT_BARRIER_SIZE_DEFAULT="2";
+
   public static void usageMessage() {
     System.out.println("Usage: java com.yahoo.ycsb.Client [options]");
     System.out.println("Options:");
@@ -772,6 +788,18 @@ public final class Client {
       statusthread.start();
     }
 
+    Boolean multiclient = Boolean.valueOf(props.getProperty(MULTICLIENT_BARRIER_PROPERTY,
+        MULTICLIENT_BARRIER_DEFAULT));
+    String zk_url = props.getProperty(MULTICLIENT_ZOOKEEPER_SERVER,
+        MULTICLIENT_ZOOKEEPER_SERVER_DEFAULT);
+    String barrier_path =  props.getProperty(MULTICLIENT_BARRIER_PATH,
+        MULTICLIENT_BARRIER_PATH_DEFAULT);
+    int barrier_size = Integer.valueOf(props.getProperty(MULTICLIENT_BARRIER_SIZE,
+        MULTICLIENT_BARRIER_SIZE_DEFAULT));
+
+    CuratorFramework zookeeper = null;
+    DistributedDoubleBarrier barrier = null;
+
     Thread terminator = null;
     long st;
     long en;
@@ -782,6 +810,19 @@ public final class Client {
       final Map<Thread, ClientThread> threads = new HashMap<>(threadcount);
       for (ClientThread client : clients) {
         threads.put(new Thread(tracer.wrap(client, "ClientThread")), client);
+      }
+
+      if(multiclient) {
+        zookeeper = CuratorFrameworkFactory.newClient(zk_url,
+            new ExponentialBackoffRetry(1000, 3));
+        zookeeper.start();
+        barrier = new DistributedDoubleBarrier(zookeeper,
+            barrier_path, barrier_size);
+        try {
+          barrier.enter();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       }
 
       st = System.currentTimeMillis();
@@ -843,6 +884,14 @@ public final class Client {
       System.err.println("Could not export measurements, error: " + e.getMessage());
       e.printStackTrace();
       System.exit(-1);
+    }
+
+    if(barrier != null){
+      try {
+        barrier.leave();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
 
     System.exit(0);
