@@ -626,7 +626,7 @@ public final class Client {
   private static final String MULTICLIENT_ZOOKEEPER_SERVER="multiclient.zk.url";
   private static final String MULTICLIENT_ZOOKEEPER_SERVER_DEFAULT="127.0.0.1:2181";
   private static final String MULTICLIENT_BARRIER_PATH="multiclient.barrier.path";
-  private static final String MULTICLIENT_BARRIER_PATH_DEFAULT="ycsb/barrier";
+  private static final String MULTICLIENT_BARRIER_PATH_DEFAULT="/ycsb/barrier";
   private static final String MULTICLIENT_BARRIER_SIZE="multiclient.barrier.size";
   private static final String MULTICLIENT_BARRIER_SIZE_DEFAULT="2";
 
@@ -785,7 +785,6 @@ public final class Client {
           Measurements.MEASUREMENT_TRACK_JVM_PROPERTY_DEFAULT).equals("true");
       statusthread = new StatusThread(completeLatch, clients, label, standardstatus, statusIntervalSeconds,
           trackJVMStats);
-      statusthread.start();
     }
 
     Boolean multiclient = Boolean.valueOf(props.getProperty(MULTICLIENT_BARRIER_PROPERTY,
@@ -819,12 +818,16 @@ public final class Client {
         barrier = new DistributedDoubleBarrier(zookeeper,
             barrier_path, barrier_size);
         try {
-          barrier.enter();
+          System.out.println("Waiting for multiclient barrier.");
+          barrier.enter(30, TimeUnit.SECONDS);
         } catch (Exception e) {
           e.printStackTrace();
+          System.exit(-1);
         }
       }
-
+      if(statusthread != null) {
+        statusthread.start();
+      }
       st = System.currentTimeMillis();
 
       for (Thread t : threads.keySet()) {
@@ -888,6 +891,7 @@ public final class Client {
 
     if(barrier != null){
       try {
+        System.out.println("Leaving multiclient barrier.");
         barrier.leave();
       } catch (Exception e) {
         e.printStackTrace();
