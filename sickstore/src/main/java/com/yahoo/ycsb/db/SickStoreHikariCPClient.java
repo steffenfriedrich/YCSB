@@ -2,19 +2,21 @@ package com.yahoo.ycsb.db;
 
 import com.yahoo.ycsb.*;
 import de.unihamburg.sickstore.backend.Version;
-import de.unihamburg.sickstore.backend.timer.SystemTimeHandler;
 import de.unihamburg.sickstore.database.ReadPreference;
 import de.unihamburg.sickstore.database.WriteConcern;
-import de.unihamburg.sickstore.database.client.SickStoreConnectionPool;
+import de.unihamburg.sickstore.database.client.SickStoreHikariPool;
+import de.unihamburg.sickstore.database.hikari.HikariConfig;
 import de.unihamburg.sickstore.database.messages.exception.DatabaseException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.zaxxer.hikari.util.UtilityElf.quietlySleep;
+
 /**
  * Created by Steffen Friedrich on 12.11.2015.
  */
-public class SickStoreClient extends DB {
+public class SickStoreHikariCPClient extends DB {
 
   /**
    * status code indicating that an operation failed
@@ -37,7 +39,7 @@ public class SickStoreClient extends DB {
   private static ReadPreference readPreference;
 
 
-  private static SickStoreConnectionPool client = null;
+  private static SickStoreHikariPool client = null;
 
   /**
    * Count the number of times initialized to teardown on the last
@@ -109,7 +111,8 @@ public class SickStoreClient extends DB {
         String url = props.getProperty("sickstore.url", "localhost");
         int port = Integer.parseInt(props.getProperty("sickstore.port", "54000"));
 
-        int maxconnections = Integer.parseInt(props.getProperty("sickstore.maxconnections", "64"));
+        int maxconnections = Integer.parseInt(props.getProperty("sickstore.maxconnections", "8"));
+        int minimumidle = Integer.parseInt(props.getProperty("sickstore.minimumidle", "2"));
 
         // configure write concern
         writeConcern = new WriteConcern();
@@ -131,7 +134,16 @@ public class SickStoreClient extends DB {
         String readPreferenceString = props.getProperty("sickstore.read_preference", ReadPreference.PRIMARY);
         readPreference = new ReadPreference(readPreferenceString);
 
-        client = new SickStoreConnectionPool(url, port, destinationNode, new SystemTimeHandler(), maxconnections);
+
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setMaximumPoolSize(maxconnections);
+        hikariConfig.setMinimumIdle(minimumidle);
+        hikariConfig.setConnectionTimeout(8000);
+        //hikariConfig.setInitializationFailTimeout(2L); // 100L
+        //hikariConfig.setIdleTimeout(3000); // 30000
+        //hikariConfig.setLeakDetectionThreshold(0); // 60 * 1000
+        client = new SickStoreHikariPool(url, port, destinationNode, hikariConfig);
+        quietlySleep(200);
       } catch (Exception e) {
         throw new DBException(e);
       }
